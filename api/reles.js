@@ -1,3 +1,4 @@
+// api/reles.js
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -15,7 +16,7 @@ export default async function handler(req, res) {
       .from('reles')
       .select('*')
       .order('timestamp', { ascending: false })
-      .limit(10);
+      .limit(20); // puedes ajustar el límite según lo que necesites
 
     if (error) throw error;
 
