@@ -1,3 +1,4 @@
+// api/control.js
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -12,16 +13,25 @@ export default async function handler(req, res) {
 
   const { habitat_id, rele, estado } = req.body;
 
+  // Validación básica
+  if (
+    typeof habitat_id !== 'number' ||
+    typeof rele !== 'number' ||
+    typeof estado !== 'boolean'
+  ) {
+    return res.status(400).json({ error: 'Datos inválidos' });
+  }
+
   try {
     const { error } = await supabase
       .from('reles')
-      .insert([{ habitat_id, rele, estado, timestamp: new Date().toISOString() }]);
+      .insert([{ habitat_id, rele, estado }]);
 
     if (error) throw error;
 
     res.status(200).json({ mensaje: 'Relé actualizado correctamente' });
   } catch (err) {
-    console.error("Error al controlar relé:", err);
+    console.error("Error al insertar:", err);
     res.status(500).json({ error: err.message });
   }
 }
