@@ -1,25 +1,25 @@
+// api/habitat.js
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
+  'https://TU_URL.supabase.co',     // ← reemplaza con tu URL de Supabase
+  'TU_ANON_KEY'                     // ← reemplaza con tu anon key
 );
 
 export default async function handler(req, res) {
-  if (req.method !== 'GET') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método no permitido' });
   }
 
-  try {
-    const { data, error } = await supabase
-      .from('habitat_info')
-      .select('*');
+  const { temperatura, humedad } = req.body;
 
-    if (error) throw error;
+  const { error } = await supabase
+    .from('habitats')
+    .insert([{ temperatura, humedad }]);
 
-    res.status(200).json({ datos: data });
-  } catch (err) {
-    console.error("Error al obtener info del hábitat:", err);
-    res.status(500).json({ error: err.message });
+  if (error) {
+    return res.status(500).json({ error: error.message });
   }
+
+  res.status(200).json({ mensaje: 'Datos guardados correctamente' });
 }
