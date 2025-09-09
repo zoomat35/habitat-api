@@ -1,15 +1,3 @@
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
-  }
-//permite que el frontend React (aunque esté en otro dominio) pueda hacer peticiones sin ser bloqueado por el navegador.
-
-// api/reles.js
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -27,7 +15,7 @@ export default async function handler(req, res) {
       .from('reles')
       .select('*')
       .order('timestamp', { ascending: false })
-      .limit(20); // puedes ajustar el límite según lo que necesites
+      .limit(10);
 
     if (error) throw error;
 
@@ -36,5 +24,4 @@ export default async function handler(req, res) {
     console.error("Error al leer relés:", err);
     res.status(500).json({ error: err.message });
   }
- }
 }
