@@ -2,8 +2,8 @@
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  'https://TU_URL.supabase.co',     // ← reemplaza con tu URL de Supabase
-  'TU_ANON_KEY'                     // ← reemplaza con tu anon key
+  'https://gehwsxrjtgjecjikhhut.supabase.co',     // ← reemplaza con tu URL de Supabase
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlaHdzeHJqdGdqZWNqaWtoaHV0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTczODA5MzEsImV4cCI6MjA3Mjk1NjkzMX0.0sm4L2l3r8vsrg8S8Xy85ugwrTS5ilBIj_pZoLLeGVY'                     // ← reemplaza con tu anon key
 );
 
 export default async function handler(req, res) {
@@ -23,3 +23,4 @@ export default async function handler(req, res) {
 
   res.status(200).json({ mensaje: 'Datos guardados correctamente' });
 }
+
