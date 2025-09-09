@@ -1,3 +1,7 @@
+import { createClient } from '@supabase/supabase-js';
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -8,11 +12,14 @@ export default async function handler(req, res) {
     return;
   }
 
-  // Simulación de lectura desde Supabase o base de datos
-  const datos = [
-    { habitat_id: 1, temperatura: 26.5, humedad: 78, timestamp: new Date().toISOString() },
-    { habitat_id: 2, temperatura: 24.1, humedad: 82, timestamp: new Date().toISOString() }
-  ];
+  const { data, error } = await supabase
+    .from('sensores')
+    .select('*')
+    .order('timestamp', { ascending: false });
 
-  res.status(200).json({ datos });
+  if (error) {
+    res.status(500).json({ error: error.message });
+  } else {
+    res.status(200).json({ datos: data });
+  }
 }
