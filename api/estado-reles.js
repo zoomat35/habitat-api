@@ -6,25 +6,18 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  try {
-    const { data, error } = await supabase
-      .from('reles')
-      .select('*')
-      .order('timestamp', { ascending: false });
+  const { data, error } = await supabase
+    .from('reles')
+    .select('*')
+    .order('timestamp', { ascending: false });
 
-    if (error) throw error;
+  if (error) return res.status(500).json({ error: error.message });
 
-    // Consolidar: solo el último por habitat_id + rele
-    const mapa = new Map();
-    for (const registro of data) {
-      const clave = `${registro.habitat_id}-${registro.rele}`;
-      if (!mapa.has(clave)) {
-        mapa.set(clave, registro);
-      }
-    }
-
-    res.status(200).json({ datos: Array.from(mapa.values()) });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  const mapa = new Map();
+  for (const r of data) {
+    const clave = `${r.habitat_id}-${r.rele}`;
+    if (!mapa.has(clave)) mapa.set(clave, r);
   }
+
+  res.status(200).json({ datos: Array.from(mapa.values()) });
 }
