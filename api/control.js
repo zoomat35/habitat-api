@@ -15,29 +15,28 @@ export default async function handler(req, res) {
 
   const { habitat_id, rele, estado } = req.body;
 
-  // Buscar si ya existe ese relé
-  const { data: existente, error: errorBuscar } = await supabase
+  // Buscar registro existente
+  const { data, error: errorBuscar } = await supabase
     .from('reles')
     .select('id')
     .eq('habitat_id', habitat_id)
     .eq('rele', rele)
-    .limit(1)
-    .single();
+    .limit(1);
 
   if (errorBuscar) return res.status(500).json({ error: errorBuscar.message });
 
-  if (existente) {
-    // Actualizar el estado
+  if (data.length > 0) {
+    // Actualizar si existe
     const { error: errorActualizar } = await supabase
       .from('reles')
       .update({ estado, timestamp: new Date().toISOString() })
-      .eq('id', existente.id);
+      .eq('id', data[0].id);
 
     if (errorActualizar) return res.status(500).json({ error: errorActualizar.message });
 
     return res.status(200).json({ mensaje: 'Estado actualizado (UPDATE)' });
   } else {
-    // Crear nuevo si no existe
+    // Insertar si no existe
     const { error: errorInsertar } = await supabase.from('reles').insert([
       { habitat_id, rele, estado, timestamp: new Date().toISOString() }
     ]);
