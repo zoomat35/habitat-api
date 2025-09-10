@@ -1,4 +1,3 @@
-// api/control.js
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
@@ -7,43 +6,15 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // Cabeceras CORS para todas las respuestas
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  // Manejo de preflight
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
-
-  // Solo permitir POST
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método no permitido' });
-  }
+  if (req.method !== 'POST') return res.status(405).end();
 
   const { habitat_id, rele, estado } = req.body;
 
-  // Validación básica
-  if (
-    typeof habitat_id !== 'number' ||
-    typeof rele !== 'number' ||
-    typeof estado !== 'boolean'
-  ) {
-    return res.status(400).json({ error: 'Datos inválidos' });
-  }
+  const { error } = await supabase.from('reles').insert([
+    { habitat_id, rele, estado, timestamp: new Date().toISOString() }
+  ]);
 
-  try {
-    const { error } = await supabase
-      .from('reles')
-      .insert([{ habitat_id, rele, estado }]);
+  if (error) return res.status(500).json({ error: error.message });
 
-    if (error) throw error;
-
-    res.status(200).json({ mensaje: 'Relé actualizado correctamente' });
-  } catch (err) {
-    console.error("Error al insertar:", err);
-    res.status(500).json({ error: err.message });
-  }
+  res.status(200).json({ mensaje: 'Estado actualizado' });
 }
