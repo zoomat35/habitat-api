@@ -15,11 +15,35 @@ export default async function handler(req, res) {
 
   const { habitat_id, rele, estado } = req.body;
 
-  const { error } = await supabase.from('reles').insert([
-    { habitat_id, rele, estado, timestamp: new Date().toISOString() }
-  ]);
+  // Buscar si ya existe ese relé
+  const { data: existente, error: errorBuscar } = await supabase
+    .from('reles')
+    .select('id')
+    .eq('habitat_id', habitat_id)
+    .eq('rele', rele)
+    .limit(1)
+    .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (errorBuscar) return res.status(500).json({ error: errorBuscar.message });
 
-  res.status(200).json({ mensaje: 'Estado actualizado' });
+  if (existente) {
+    // Actualizar el estado
+    const { error: errorActualizar } = await supabase
+      .from('reles')
+      .update({ estado, timestamp: new Date().toISOString() })
+      .eq('id', existente.id);
+
+    if (errorActualizar) return res.status(500).json({ error: errorActualizar.message });
+
+    return res.status(200).json({ mensaje: 'Estado actualizado (UPDATE)' });
+  } else {
+    // Crear nuevo si no existe
+    const { error: errorInsertar } = await supabase.from('reles').insert([
+      { habitat_id, rele, estado, timestamp: new Date().toISOString() }
+    ]);
+
+    if (errorInsertar) return res.status(500).json({ error: errorInsertar.message });
+
+    return res.status(200).json({ mensaje: 'Estado creado (INSERT)' });
+  }
 }
