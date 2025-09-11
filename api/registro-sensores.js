@@ -6,7 +6,7 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
-  // CORS
+  // 🔐 CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -16,7 +16,7 @@ export default async function handler(req, res) {
 
   const { habitat_id, temperatura, humedad } = req.body;
 
-  // Validación básica
+  // ✅ Validación básica
   if (
     typeof habitat_id !== 'number' ||
     typeof temperatura !== 'number' ||
@@ -25,7 +25,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Datos inválidos' });
   }
 
-  // UPSERT: actualiza si existe, inserta si no
+  // 📥 Registro en Supabase con UPSERT
   const { error } = await supabase
     .from('sensores')
     .upsert(
@@ -40,8 +40,10 @@ export default async function handler(req, res) {
       { onConflict: ['habitat_id'] }
     );
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('❌ Error en Supabase:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
 
   res.status(200).json({ mensaje: 'Datos registrados correctamente' });
 }
-
