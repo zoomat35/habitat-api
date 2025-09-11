@@ -12,18 +12,21 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const { data, error } = await supabase
+  const { habitat_id, rele } = req.query;
+
+  let query = supabase
     .from('reles')
-    .select('*')
+    .select('estado')
     .order('timestamp', { ascending: false });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (habitat_id) query = query.eq('habitat_id', parseInt(habitat_id));
+  if (rele) query = query.eq('rele', parseInt(rele));
 
-  const mapa = new Map();
-  for (const r of data) {
-    const clave = `${r.habitat_id}-${r.rele}`;
-    if (!mapa.has(clave)) mapa.set(clave, r);
+  const { data, error } = await query.limit(1);
+
+  if (error || !data || data.length === 0) {
+    return res.status(404).json({ error: 'No encontrado' });
   }
 
-  res.status(200).json({ datos: Array.from(mapa.values()) });
+  res.status(200).json(data[0]);
 }
