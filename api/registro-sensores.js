@@ -6,6 +6,7 @@ const supabase = createClient(
 );
 
 export default async function handler(req, res) {
+  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -15,20 +16,32 @@ export default async function handler(req, res) {
 
   const { habitat_id, temperatura, humedad } = req.body;
 
-  if (typeof habitat_id !== 'number' || typeof temperatura !== 'number' || typeof humedad !== 'number') {
+  // Validación básica
+  if (
+    typeof habitat_id !== 'number' ||
+    typeof temperatura !== 'number' ||
+    typeof humedad !== 'number'
+  ) {
     return res.status(400).json({ error: 'Datos inválidos' });
   }
 
-  const { error } = await supabase.from('sensores').insert([
-    {
-      habitat_id,
-      temperatura,
-      humedad,
-      timestamp: new Date().toISOString()
-    }
-  ]);
+  // UPSERT: actualiza si existe, inserta si no
+  const { error } = await supabase
+    .from('sensores')
+    .upsert(
+      [
+        {
+          habitat_id,
+          temperatura,
+          humedad,
+          timestamp: new Date().toISOString()
+        }
+      ],
+      { onConflict: ['habitat_id'] }
+    );
 
   if (error) return res.status(500).json({ error: error.message });
 
   res.status(200).json({ mensaje: 'Datos registrados correctamente' });
 }
+
