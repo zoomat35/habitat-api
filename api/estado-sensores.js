@@ -1,32 +1,29 @@
-import { useEffect, useState } from 'react';
+import { createClient } from '@supabase/supabase-js';
 
-export default function SensorEstado({ habitat_id }) {
-  const [sensor, setSensor] = useState(null);
+const supabase = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
+);
 
-  useEffect(() => {
-    fetch(`https://habitat-api.vercel.app/api/estado-sensores?habitat_id=${habitat_id}`)
-      .then(res => res.json())
-      .then(data => {
-        console.log("📡 Sensor recibido:", data);
-        if (typeof data.temperatura === 'number' && typeof data.humedad === 'number') {
-          setSensor(data);
-        } else {
-          setSensor(null);
-        }
-      })
-      .catch(err => {
-        console.error("❌ Error al obtener sensores:", err);
-        setSensor(null);
-      });
-  }, [habitat_id]);
+export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (!sensor) return <p>🔄 Cargando sensores...</p>;
+  if (req.method === 'OPTIONS') return res.status(200).end();
 
-  return (
-    <div>
-      <p>🌡️ Temp: {sensor.temperatura.toFixed(1)} °C</p>
-      <p>💧 Hum: {sensor.humedad.toFixed(1)} %</p>
-      <p>🕒 {new Date(sensor.timestamp).toLocaleString()}</p>
-    </div>
-  );
+  const { habitat_id } = req.query;
+
+  const { data, error } = await supabase
+    .from('sensores')
+    .select('temperatura, humedad, timestamp')
+    .eq('habitat_id', Number(habitat_id))
+    .order('timestamp', { ascending: false })
+    .limit(1);
+
+  if (error || !data || data.length === 0) {
+    return res.status(404).json({ error: 'No hay datos' });
+  }
+
+  res.status(200).json(data[0]);
 }
