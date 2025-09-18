@@ -16,18 +16,26 @@ export default async function handler(req, res) {
 
   let query = supabase
     .from('reles')
-    .select('estado')
+    .select('habitat_id, rele, estado')
     .order('timestamp', { ascending: false });
 
   if (habitat_id) query = query.eq('habitat_id', parseInt(habitat_id));
   if (rele) query = query.eq('rele', parseInt(rele));
 
-  const { data, error } = await query.limit(1);
+  const { data, error } = await query;
 
   if (error || !data || data.length === 0) {
     return res.status(404).json({ error: 'No encontrado' });
   }
 
-  res.status(200).json({ datos: data });
+  // Consolidar el último estado por habitat_id + rele
+  const vistos = new Set();
+  const consolidados = data.filter(r => {
+    const clave = `${r.habitat_id}-${r.rele}`;
+    if (vistos.has(clave)) return false;
+    vistos.add(clave);
+    return true;
+  });
 
+  res.status(200).json({ datos: consolidados });
 }
